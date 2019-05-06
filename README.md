@@ -333,10 +333,11 @@ HISAT2 version 2.1.0 by Daehwan Kim ( Infphilo@gmail.com, http://www.ccb.jhu.edu
 
 As you can see, we simply enter our reference genome files and the desired prefix for our .ht2 files. Now, fortunately for us, Xanadu has many indexed genomes which we may use. To see if there is a hisat2 <i>Arabidopsis thaliana</i> indexed genome we need to look at the <a href="https://bio Informatics.uconn.edu/databases/">Xanadu databases</a> page. We see that our desired indexed genome is in the location /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/Athaliana_HISAT2/. Now we are ready to align our reads using hisat2 (for hisat2, the script is going to be written first with an explanation of the options after).
 
-<pre style="color: silver; background: black;">nano hisat2_run.sh
+```bash
+nano hisat2_run.sh
+```
 
-                                                                                                               
-
+```bash
 #!/bin/bash
 #SBATCH --job-name=hisat2_run
 #SBATCH --mail-user=
@@ -368,15 +369,18 @@ hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thalia
 
 hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep3_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep3_R2.fastq -S ../mapping/_mutant_Rep3.sam
 
+```
 
-<br>
-<pre style="color: silver; background: black;">-p : number of processors been used
+Command
+```
+-p : number of processors been used
 --dta: report alignments tailored for transcript assemblers
 -x: path to index generated from previous step
 -q: query input files in fastq format
--S: output SAM file</pre>
-<br>
-<pre style="color: silver; background: black;">bash-4.2$ sbatch hisat2_run.sh</pre>
+-S: output SAM file
+```
+
+You can run this using ` sbatch hisat2_run.sh`
 
 Once the mapping have been completed, the file structure is as follows:
 <pre style="color: silver; background: black;">bash-4.2$ ls
