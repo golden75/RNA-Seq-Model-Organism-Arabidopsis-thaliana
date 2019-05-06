@@ -1430,7 +1430,7 @@ The output of head(clusters) is much too large to include here. However, we can 
 
 <pre style="color: silver; background: black;">plot(clusters)</pre>
 
-<img src="pcaplot_for_all_libraries.png">
+<img src="Cluster.png">
 
 If you squint you can estimate how many groups is suitable with which to start. I count 12. We can group our dendogram into its twelve most clostly related parts using the function rect.hclust(). 
 
