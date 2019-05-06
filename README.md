@@ -672,7 +672,8 @@ athaliana_wt_Rep1.count
 
 Description of above files
 
-<pre style="color: silver; background: black;">e_data.ctab: exon-level expression measurements. One row per exon. Columns are e_id (numeric exon id), chr, strand, start, end (genomic location of the exon), and the following expression measurements for each sample:
+```
+e_data.ctab: exon-level expression measurements. One row per exon. Columns are e_id (numeric exon id), chr, strand, start, end (genomic location of the exon), and the following expression measurements for each sample:
 	rcount: reads overlapping the exon
 	ucount: uniquely mapped reads overlapping the exon
 	mrcount: multi-map-corrected number of reads overlapping the exon
@@ -696,6 +697,7 @@ t_data.ctab: transcript-level expression measurements. One row per transcript. C
 	FPKM: Cufflinks-estimated FPKM for the transcript (available for each sample)
 e2t.ctab: table with two columns, e_id and t_id, denoting which exons belong to which transcripts. These ids match the ids in the e_data and t_data tables.
 i2t.ctab: table with two columns, i_id and t_id, denoting which introns belong to which transcripts. These ids match the ids in the i_data and t_data tables.
+```
 
 
 Let's have a look at the stringtie output .counts file which we will be using in ballgown:
