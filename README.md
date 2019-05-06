@@ -33,7 +33,7 @@ You may connect to Xanadu via SSH, which will place you in your home directory
 Your home directory contains 10TB of storage and will not pollute the capacities of other users on the cluster. 
 
 The workflow may be cloned into the appropriate directory using the terminal command:
-<pre style="color: silver; background: black;">-bash-4.2$ git clone https://github.com/wolf-adam-eily/rnaseq_for_model_plant.git
+<pre style="color: silver; background: black;">-bash-4.2$ git clone https://github.com/CBC-UCONN/RNA-Seq-Model-Organism-Arabidopsis-thaliana.git
 -bash-4.2$ cd rnaseq_for_model_plant
 -bash-4.2$ ls
 -bash-4.2$ cd rnaseq_for_model_plant/
