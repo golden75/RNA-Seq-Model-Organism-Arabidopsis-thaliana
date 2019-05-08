@@ -950,6 +950,150 @@ write.csv(results_genes, "results_genes.csv", row.names=FALSE)
 &#35;&#35;we use row.names=FALSE because currently the row names are just the numbers 1, 2, 3. . .
 </pre>
 
+Now we want to visualize our data:
+We want to compare our genes based on their FPKM values. We know from reading ballgown's vignette that we can extract the 
+expression data using texpr() and specifying a measure. 
+
+<pre style="color: silver; background: black;">
+fpkm = texpr(bg, meas = "FPKM")
+&#35;&#35;let's look at the distribution
+plot(density(fpkm[,1]),typr="l",main="Density Plot of \nUntransformed FPKM",col="blue")
+lines(density(fpkm[,2]),col="red")
+lines(density(fpkm[,3]),col="green")
+lines(density(fpkm[,4]),col="dodgerblue")
+lines(density(fpkm[,5]),col="pink")
+lines(density(fpkm[,6]),col="limegreen")
+</pre>
+<img src="Rplot.png">
+We can see virtually nothing except that there are many, many genes that are lowly expressed. The reason for the sharp peak 
+is that the density plot automatically scales its x-axis from the lowest expressed to the highest expressed. Let's see what 
+those values are:
+
+<pre style="color: silver; background: black;">
+min(fpkm)
+<strong>0</strong>
+max(fpkm)
+<strong>13386.3</strong>
+</pre>
+Due to the scaling, we cannot truly see the distribution. However, what we <i>can</i> do is to transform the data such that the variance is not so staggering, allowing us to see better. There are a few rules for this, all of the data must be transformed in a consistent and reversible manner, after transformation no data may have a negative value, and all data with a value of 0 must also be 0 after transformation. The reason for the second and third rules is more epistemological. For us, if a gene has an FPKM of 0, then for that sample the gene is unexpressed. Should we transform the data and that particular gene's FPKM is now above 0, we are fundamentally changing the nature of that sample -- i.e., we are now saying it is expresesing a gene it actually is not! Additionally, there is no such thing as negative expression, so there is no physical reality where we will have an FPKM beneath 0. With these three rules, we see that taking the log of all our data will prevent negative values, be consistent and reversible, and scale down our variance. However, log(0) =  Inf! We have broken a cardinal rule (oddly enough, the fact that it is  Infinity is not a rule-breaker, but rather that it is <b>negative</b>  Infinity! Seeing this, we can simply add 1 to our data before log transforming, log(0+1) = 0. Now we have fulfilled all three rules.
+
+<pre style="color: silver; background: black;">
+fpkm = log2(fpkm + 1)
+head(fpkm)
+plot(density(fpkm[,1]),type="l",main="Density Comparison",col="red")
+lines(density(fpkm[,2]),col="blue")
+lines(density(fpkm[,3]),col="green")
+lines(density(fpkm[,4]),col="red")
+lines(density(fpkm[,5]),col="blue")
+lines(density(fpkm[,6]),col="green")</pre>
+
+We now we see an actual distribution. Let's see the difference in distribution between each individual part. To do this we are going to plot the density for each part, one by one, and watch for great changes.
+
+<img src=Rplot01.png></a><br>
+
+Now we will generate a <a href="http://setosa.io/ev/principal-component-analysis/">PCA</a> plot. I strongly advise you read the PCA link before continuing if you are not familiar with Principal Component Analysis. It will not be explained in this tutorial.
+
+Let's create a vector with our PCA point names
+<pre style="color: silver; background: black;">
+short_names = c("mu1","mu2","mu3","wt1","wt2","wt3")</pre>
+We are going to be using the <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson coefficient</a> for our PCA plot. You may think of the Pearson coefficient simply as a measure of similarity. If two datasets are very similar, they will have a Pearson coefficient approaching 1 (every data compared to itself has a Pearson coefficient of 1). If two datasets are very dissimilar, they will have a Pearson coefficient approaching 0 Let's calculate a vector containing the correlation coefficient:
+
+<pre style="color: silver; background: black;">
+r = cor(fpkm, use="pairwise.complete.obs", method="pearson")</pre>
+Let's have a look at r:
+
+<pre style="color: silver; background: black;">
+r
+
+<strong style="color:blue;">                           FPKM.athaliana_mutant_Rep1 FPKM.athaliana_mutant_Rep2 FPKM.athaliana_mutant_Rep3 FPKM.athaliana_wt_Rep1 FPKM.athaliana_wt_Rep2 FPKM.athaliana_wt_Rep3
+FPKM.athaliana_mutant_Rep1                  1.0000000                  0.9689147                  0.9701448              0.9617423              0.9738848              0.9716859
+FPKM.athaliana_mutant_Rep2                  0.9689147                  1.0000000                  0.9713023              0.9659690              0.9676161              0.9644472
+FPKM.athaliana_mutant_Rep3                  0.9701448                  0.9713023                  1.0000000              0.9668139              0.9684712              0.9649888
+FPKM.athaliana_wt_Rep1                      0.9617423                  0.9659690                  0.9668139              1.0000000              0.9606613              0.9631253
+FPKM.athaliana_wt_Rep2                      0.9738848                  0.9676161                  0.9684712              0.9606613              1.0000000              0.9733014
+FPKM.athaliana_wt_Rep3                      0.9716859                  0.9644472                  0.9649888              0.9631253              0.9733014              1.0000000</strong>
+
+</pre>
+Here we see each member of the diagonal is 1.000000. Of course we knew this already, as each member is 100% similar to itself! Then we have the similarity measures of each sample to each other sample.
+
+Rather than calculate the similarity, it would be nicer to calculate the dissimilarity or distance between each sample. We know that if two samples are the same, their similarity measure is 1.000000. We also know that then their dissimilarity is 0%, or 0.000000. Here we see that if we subtract each element from 1, we get the dissimilarity matrix! Let's do it:
+
+<pre style="color: silver; background: black;">
+d = 1 - r
+d
+<strong style="color:blue;">
+                           FPKM.athaliana_mutant_Rep1 FPKM.athaliana_mutant_Rep2 FPKM.athaliana_mutant_Rep3 FPKM.athaliana_wt_Rep1 FPKM.athaliana_wt_Rep2 FPKM.athaliana_wt_Rep3
+FPKM.athaliana_mutant_Rep1                 0.00000000                 0.03108533                 0.02985520             0.03825768             0.02611516             0.02831408
+FPKM.athaliana_mutant_Rep2                 0.03108533                 0.00000000                 0.02869768             0.03403101             0.03238395             0.03555277
+FPKM.athaliana_mutant_Rep3                 0.02985520                 0.02869768                 0.00000000             0.03318614             0.03152878             0.03501125
+FPKM.athaliana_wt_Rep1                     0.03825768                 0.03403101                 0.03318614             0.00000000             0.03933872             0.03687471
+FPKM.athaliana_wt_Rep2                     0.02611516                 0.03238395                 0.03152878             0.03933872             0.00000000             0.02669858
+FPKM.athaliana_wt_Rep3                     0.02831408                 0.03555277                 0.03501125             0.03687471             0.02669858             0.00000000</strong>
+</pre>
+R has a function which will perform the principal component analysis for us when provided with a dissimilarity matrix, cmdscale. Let's have a look at it:
+
+<pre style="color: silver; background: black;">
+help(cmdscale)</pre>
+
+<pre style="color: silver; background: black;"><strong>Classical (Metric) Multidimensional Scaling</strong>
+
+<strong style="color: grey;">Description</strong>
+
+<em style="color: green;">Classical multidimensional scaling (MDS) of a data matrix. Also known as principal coordinates analysis (Gower, 1966).</em>
+
+<strong style="color: grey;">Usage</strong>
+
+cmdscale(d, k = 2, eig = FALSE, add = FALSE, x.ret = FALSE,
+         list. = eig || add || x.ret)
+<strong style=color: green;">Arguments</strong>
+
+d	a distance structure such as that returned by dist or a full symmetric matrix containing the dissimilarities.
+k	the maximum dimension of the space which the data are to be represented in; must be in {1, 2, …, n-1}.
+eig	indicates whether eigenvalues should be returned.
+add	logical indicating if an additive constant c* should be computed, and added to the non-diagonal dissimilarities such that the 
+	modified dissimilarities are Euclidean.
+x.ret	indicates whether the doubly centred symmetric distance matrix should be returned.
+list.	logical indicating if a list should be returned or just the n * k matrix, see ‘Value:’.
+
+<strong style="color:grey;">Details</strong>
+
+Multidimensional scaling takes a set of dissimilarities and returns a set of points such that the distances between the points are approximately equal to the dissimilarities. (It is a major part of what ecologists call ‘ordination’.)
+
+A set of Euclidean distances on n points can be represented exactly in at most n - 1 dimensions. cmdscale follows the analysis of Mardia (1978), and returns the best-fitting k-dimensional representation, where k may be less than the argument k.
+
+The representation is only determined up to location (cmdscale takes the column means of the configuration to be at the origin), rotations and reflections. The configuration returned is given in principal-component axes, so the reflection chosen may differ between R platforms (see prcomp).
+
+When add = TRUE, a minimal additive constant c* is computed such that the dissimilarities d[i,j] + c* are Euclidean and hence can be represented in n - 1 dimensions. Whereas S (Becker et al, 1988) computes this constant using an approximation suggested by Torgerson, R uses the analytical solution of Cailliez (1983), see also Cox and Cox (2001). Note that because of numerical errors the computed eigenvalues need not all be non-negative, and even theoretically the representation could be in fewer than n - 1 dimensions.</pre>
+
+Let's perform our principal component analysis:
+
+<pre style="color: silver; background: black;">pca = cmdscale(d, k=2)</pre>
+We expect pca to have four rows, each row corresponding to a sample, and two columns, the first column representing our first coordinate axis and the second dimension representing our second coordinate axis. If we plot the first column against the second column, the distances between points is the dissimilarity between points.
+
+<pre style="color: silver; background: black;">
+pca
+
+<strong style="color:blue;">                                   [,1]          [,2]
+FPKM.athaliana_mutant_Rep1  0.010188699  0.0037862309
+FPKM.athaliana_mutant_Rep2 -0.007391951  0.0125768089
+FPKM.athaliana_mutant_Rep3 -0.006736291  0.0104882107
+FPKM.athaliana_wt_Rep1     -0.021280708 -0.0133394678
+FPKM.athaliana_wt_Rep2      0.013442569  0.0001839026
+FPKM.athaliana_wt_Rep3      0.011777681 -0.0136956852</strong>
+
+</pre>
+For this next step it is assumed that you are familiar with plotting in R. If not you may look <a href="https://bio Informatics.uconn.edu/introduction-to-r/">here</a>.
+
+<pre style="color: silver; background: black;">
+plot.new()
+par(mfrow=c(1,1))
+##point colors
+point_colors = c("red", "red","red","blue", "blue", "blue")
+plot(pca[,1],pca[,2], xlab="", ylab="", main="PCA plot for all libraries", xlim=c(-0.025,0.02), ylim=c(-0.05,0.05),col=point_colors)
+text(pca[,1],pca[,2],pos=2,short_names, col=c("red", "red","red","blue", "blue", "blue"))</pre>
+<img src="pcaplot_for_all_libraries.png">
+
+
 We should take advantage while we have this results_genes object and annotate the genes we have deemed significant (p-values below 0.01, every gene now in this object). To annotate the genes we will be using <a href="https://www.bioconductor.org/packages/devel/bioc/html/biomaRt.html">biomaRt</a> and biomartr. You can install these with the following code:
 <pre style="color: silver; background: black;">
 ## try http:// if https:// URLs are not supported
@@ -1220,559 +1364,26 @@ A-ha. We see the mismatch in dimension length is due to some genes having differ
 
 write.csv(file="annotated_genes.csv",annotated_genes,row.names=F)</pre>
 
-Now we want to visualize our data:
-We want to compare our genes based on their FPKM values. We know from reading ballgown's vignette that we can extract the 
-expression data using texpr() and specifying a measure. 
-
-<pre style="color: silver; background: black;">
-fpkm = texpr(bg, meas = "FPKM")
-&#35;&#35;let's look at the distribution
-plot(density(fpkm[,1]),typr="l",main="Density Plot of \nUntransformed FPKM",col="blue")
-lines(density(fpkm[,2]),col="red")
-lines(density(fpkm[,3]),col="green")
-lines(density(fpkm[,4]),col="dodgerblue")
-lines(density(fpkm[,5]),col="pink")
-lines(density(fpkm[,6]),col="limegreen")
-</pre>
-<img src="Rplot.png">
-We can see virtually nothing except that there are many, many genes that are lowly expressed. The reason for the sharp peak 
-is that the density plot automatically scales its x-axis from the lowest expressed to the highest expressed. Let's see what 
-those values are:
-
-<pre style="color: silver; background: black;">
-min(fpkm)
-<strong>0</strong>
-max(fpkm)
-<strong>13386.3</strong>
-</pre>
-Due to the scaling, we cannot truly see the distribution. However, what we <i>can</i> do is to transform the data such that the variance is not so staggering, allowing us to see better. There are a few rules for this, all of the data must be transformed in a consistent and reversible manner, after transformation no data may have a negative value, and all data with a value of 0 must also be 0 after transformation. The reason for the second and third rules is more epistemological. For us, if a gene has an FPKM of 0, then for that sample the gene is unexpressed. Should we transform the data and that particular gene's FPKM is now above 0, we are fundamentally changing the nature of that sample -- i.e., we are now saying it is expresesing a gene it actually is not! Additionally, there is no such thing as negative expression, so there is no physical reality where we will have an FPKM beneath 0. With these three rules, we see that taking the log of all our data will prevent negative values, be consistent and reversible, and scale down our variance. However, log(0) =  Inf! We have broken a cardinal rule (oddly enough, the fact that it is  Infinity is not a rule-breaker, but rather that it is <b>negative</b>  Infinity! Seeing this, we can simply add 1 to our data before log transforming, log(0+1) = 0. Now we have fulfilled all three rules.
-
-<pre style="color: silver; background: black;">
-fpkm = log2(fpkm + 1)
-head(fpkm)
-plot(density(fpkm[,1]),type="l",main="Density Comparison",col="red")
-lines(density(fpkm[,2]),col="blue")
-lines(density(fpkm[,3]),col="green")
-lines(density(fpkm[,4]),col="red")
-lines(density(fpkm[,5]),col="blue")
-lines(density(fpkm[,6]),col="green")</pre>
-
-We now we see an actual distribution. Let's see the difference in distribution between each individual part. To do this we are going to plot the density for each part, one by one, and watch for great changes.
-
-<img src=Rplot01.png></a><br>
-
-Now we will generate a <a href="http://setosa.io/ev/principal-component-analysis/">PCA</a> plot. I strongly advise you read the PCA link before continuing if you are not familiar with Principal Component Analysis. It will not be explained in this tutorial.
-
-Let's create a vector with our PCA point names
-<pre style="color: silver; background: black;">
-short_names = c("mu1","mu2","mu3","wt1","wt2","wt3")</pre>
-We are going to be using the <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson coefficient</a> for our PCA plot. You may think of the Pearson coefficient simply as a measure of similarity. If two datasets are very similar, they will have a Pearson coefficient approaching 1 (every data compared to itself has a Pearson coefficient of 1). If two datasets are very dissimilar, they will have a Pearson coefficient approaching 0 Let's calculate a vector containing the correlation coefficient:
-
-<pre style="color: silver; background: black;">
-r = cor(fpkm, use="pairwise.complete.obs", method="pearson")</pre>
-Let's have a look at r:
-
-<pre style="color: silver; background: black;">
-r
-
-<strong style="color:blue;">                           FPKM.athaliana_mutant_Rep1 FPKM.athaliana_mutant_Rep2 FPKM.athaliana_mutant_Rep3 FPKM.athaliana_wt_Rep1 FPKM.athaliana_wt_Rep2 FPKM.athaliana_wt_Rep3
-FPKM.athaliana_mutant_Rep1                  1.0000000                  0.9689147                  0.9701448              0.9617423              0.9738848              0.9716859
-FPKM.athaliana_mutant_Rep2                  0.9689147                  1.0000000                  0.9713023              0.9659690              0.9676161              0.9644472
-FPKM.athaliana_mutant_Rep3                  0.9701448                  0.9713023                  1.0000000              0.9668139              0.9684712              0.9649888
-FPKM.athaliana_wt_Rep1                      0.9617423                  0.9659690                  0.9668139              1.0000000              0.9606613              0.9631253
-FPKM.athaliana_wt_Rep2                      0.9738848                  0.9676161                  0.9684712              0.9606613              1.0000000              0.9733014
-FPKM.athaliana_wt_Rep3                      0.9716859                  0.9644472                  0.9649888              0.9631253              0.9733014              1.0000000</strong>
-
-</pre>
-Here we see each member of the diagonal is 1.000000. Of course we knew this already, as each member is 100% similar to itself! Then we have the similarity measures of each sample to each other sample.
-
-Rather than calculate the similarity, it would be nicer to calculate the dissimilarity or distance between each sample. We know that if two samples are the same, their similarity measure is 1.000000. We also know that then their dissimilarity is 0%, or 0.000000. Here we see that if we subtract each element from 1, we get the dissimilarity matrix! Let's do it:
-
-<pre style="color: silver; background: black;">
-d = 1 - r
-d
-<strong style="color:blue;">
-                           FPKM.athaliana_mutant_Rep1 FPKM.athaliana_mutant_Rep2 FPKM.athaliana_mutant_Rep3 FPKM.athaliana_wt_Rep1 FPKM.athaliana_wt_Rep2 FPKM.athaliana_wt_Rep3
-FPKM.athaliana_mutant_Rep1                 0.00000000                 0.03108533                 0.02985520             0.03825768             0.02611516             0.02831408
-FPKM.athaliana_mutant_Rep2                 0.03108533                 0.00000000                 0.02869768             0.03403101             0.03238395             0.03555277
-FPKM.athaliana_mutant_Rep3                 0.02985520                 0.02869768                 0.00000000             0.03318614             0.03152878             0.03501125
-FPKM.athaliana_wt_Rep1                     0.03825768                 0.03403101                 0.03318614             0.00000000             0.03933872             0.03687471
-FPKM.athaliana_wt_Rep2                     0.02611516                 0.03238395                 0.03152878             0.03933872             0.00000000             0.02669858
-FPKM.athaliana_wt_Rep3                     0.02831408                 0.03555277                 0.03501125             0.03687471             0.02669858             0.00000000</strong>
-</pre>
-R has a function which will perform the principal component analysis for us when provided with a dissimilarity matrix, cmdscale. Let's have a look at it:
-
-<pre style="color: silver; background: black;">
-help(cmdscale)</pre>
-
-<pre style="color: silver; background: black;"><strong>Classical (Metric) Multidimensional Scaling</strong>
-
-<strong style="color: grey;">Description</strong>
-
-<em style="color: green;">Classical multidimensional scaling (MDS) of a data matrix. Also known as principal coordinates analysis (Gower, 1966).</em>
-
-<strong style="color: grey;">Usage</strong>
-
-cmdscale(d, k = 2, eig = FALSE, add = FALSE, x.ret = FALSE,
-         list. = eig || add || x.ret)
-<strong style=color: green;">Arguments</strong>
-
-d	a distance structure such as that returned by dist or a full symmetric matrix containing the dissimilarities.
-k	the maximum dimension of the space which the data are to be represented in; must be in {1, 2, …, n-1}.
-eig	indicates whether eigenvalues should be returned.
-add	logical indicating if an additive constant c* should be computed, and added to the non-diagonal dissimilarities such that the 
-	modified dissimilarities are Euclidean.
-x.ret	indicates whether the doubly centred symmetric distance matrix should be returned.
-list.	logical indicating if a list should be returned or just the n * k matrix, see ‘Value:’.
-
-<strong style="color:grey;">Details</strong>
-
-Multidimensional scaling takes a set of dissimilarities and returns a set of points such that the distances between the points are approximately equal to the dissimilarities. (It is a major part of what ecologists call ‘ordination’.)
-
-A set of Euclidean distances on n points can be represented exactly in at most n - 1 dimensions. cmdscale follows the analysis of Mardia (1978), and returns the best-fitting k-dimensional representation, where k may be less than the argument k.
-
-The representation is only determined up to location (cmdscale takes the column means of the configuration to be at the origin), rotations and reflections. The configuration returned is given in principal-component axes, so the reflection chosen may differ between R platforms (see prcomp).
-
-When add = TRUE, a minimal additive constant c* is computed such that the dissimilarities d[i,j] + c* are Euclidean and hence can be represented in n - 1 dimensions. Whereas S (Becker et al, 1988) computes this constant using an approximation suggested by Torgerson, R uses the analytical solution of Cailliez (1983), see also Cox and Cox (2001). Note that because of numerical errors the computed eigenvalues need not all be non-negative, and even theoretically the representation could be in fewer than n - 1 dimensions.</pre>
-
-Let's perform our principal component analysis:
-
-<pre style="color: silver; background: black;">pca = cmdscale(d, k=2)</pre>
-We expect pca to have four rows, each row corresponding to a sample, and two columns, the first column representing our first coordinate axis and the second dimension representing our second coordinate axis. If we plot the first column against the second column, the distances between points is the dissimilarity between points.
-
-<pre style="color: silver; background: black;">
-pca
-
-<strong style="color:blue;">                                   [,1]          [,2]
-FPKM.athaliana_mutant_Rep1  0.010188699  0.0037862309
-FPKM.athaliana_mutant_Rep2 -0.007391951  0.0125768089
-FPKM.athaliana_mutant_Rep3 -0.006736291  0.0104882107
-FPKM.athaliana_wt_Rep1     -0.021280708 -0.0133394678
-FPKM.athaliana_wt_Rep2      0.013442569  0.0001839026
-FPKM.athaliana_wt_Rep3      0.011777681 -0.0136956852</strong>
-
-</pre>
-For this next step it is assumed that you are familiar with plotting in R. If not you may look <a href="https://bio Informatics.uconn.edu/introduction-to-r/">here</a>.
-
-<pre style="color: silver; background: black;">
-plot.new()
-par(mfrow=c(1,1))
-##point colors
-point_colors = c("red", "red","red","blue", "blue", "blue")
-plot(pca[,1],pca[,2], xlab="", ylab="", main="PCA plot for all libraries", xlim=c(-0.025,0.02), ylim=c(-0.05,0.05),col=point_colors)
-text(pca[,1],pca[,2],pos=2,short_names, col=c("red", "red","red","blue", "blue", "blue"))</pre>
-<img src="pcaplot_for_all_libraries.png">
 
 <h2 id="Seventh_Point_Header">Topological networking using cytoscape</h2>
 
-<a href="https://github.com/miriamposner/cytoscape_tutorials">Cytoscape</a> is a desktop program which creates visual topological networks of data. The only requirement to create a topological network in Cytoscape is to have an "edge list". An edge list is a two-column list which comprises two separate types of data. Each row of the edge list is a single piece of  Information (so both columns combine to form a piece of  Infromation for the row) that Cytoscape uses. To begin, download and install Cytoscape. Now, let's go over the two columns of an edge list:
+<a href="https://github.com/miriamposner/cytoscape_tutorials">Cytoscape</a> is a desktop program which creates visual topological networks of data. To visualise our differentially regulated genes in a network on cytoscape we will follow the following steps
 
-The two columns of an edge list represent the "sources" and "nodes". You may instead think of the two columns representing an object and its group. For instance, the edge list:
+1. Load networkfile 
+2. Lay the network out
+3. Load Expression Data 
+4. Examine node attributes
 
-<pre style="color: silver; background: black;">
-	A	1
-	B	1
-	C	4
-	D	3
-	A	4
-	C	3</pre>
-means that object A is in both groups 1 and 4, object B is in only group 1, object C is in groups 3 and 4, and so forth. We could then say that our sources are the objects, and our nodes are the groups to which each object belongs. To make our topological network we simply put one point for each object and one point for each group on a piece of paper and draw arrows going from each object-point to each group-point. If two objects are pointing to the same group, we place those objects closer to the group. If an object is part of two or more groups, that object will have two or more arrows pointing to each distinct group to which it belong. The cardinal rule is that no object may have two arrows pointing to the same group (that is, the set for that group is pairwise disjoint). Now we need to begin thinking about our differential expression data. We could group the genes with the phenotype which expresses them most. . .but that would leave all of our genes (sources) flowing to only four sinks (nodes). That certainly does not communicate much. However, we have our differential gene expression results written into a csv, complete with the fold-change, or percent increase, between phenotypes. We could group our genes according to their fold-changes. However, should we do this, each of our sources would flow only to one sink, and we'd have no  Information about the flow between sinks. What we <i>can</i> do, however, is to perform a variety of grouping exercises, successively grouping our results into larger and larger groups. The initial grouping will be the most specific, composed of the most sinks. However, the second grouping will be less specific, consisting of fewer sinks but the same number of sources. Therefore, some of the sinks in the initial grouping have converged. We can now determine which sinks have converged and conncet those sinks in the first grouping. We can repeat this until it is of no more use to us. 
+A detailed slides and tutorial is available at this <a href="https://cytoscape.org/cytoscape-tutorials/protocols/basic-data-visualization/#/">LINK</a>. Lets start cytoscape and the application will start with following screen.<img src="cytoscape_a1.png">   
+Have a look around at different tabs and menu and familiarise yourself with it. A network can be loaded in cytoscape using the import function located under file menu as shown in the image below.  A network can be imported from a file (as we are going to do it), url or from public database.<img src="cytoscape_a2.png">  Import TAIR10 network file TairPP_refined.txt using file>import>Network from FIle option . The following table will be displayed .<img src="cytoscape_a3.png">   The table will display different columns of the network file. In this we have to specify which column represent protein A (source node) and which column represent protein B (target node) of A --> B type protein-protein intercation.
+<img src="cytoscape_a4.png"> <img src="cytoscape_a5.png"> 
 
-To achieve this, we can create a series of family trees, or <a href="https://en.wikipedia.org/wiki/Dendrogram">dendrograms</a>. You have most likely encountered many dendrograms before in an evolutionary biology course. An important note about dendrograms is that only the <b>height</b> of the tree matters. It does not matter, laterally, how close together any two leaves are. Leaves and nodes which are separated by a small height are more closely related than leaves and nodes which are separated by greater heights, regardless of the lateral distance needed to reach one or the other. This will come in handy. We can create a dendrogram of our genes based on their fold changes and then create our groups by taking at first each node and its closer neighbor. Afterwards, we can create a second dendogram of our genes based on their changes and create our groups by taking each node and its two closest neighbors. The second tree will be less specific, and each group will be a combination of two groups frmo the first tree. We continue this process until it is of no use, and then create our edge-list as needed. To do this, we will be back in R, this time using the package "RFLPtools", which allows us to write our groups into a plain-text document. Let's load R and our gene results:
-	
-<pre style="color: silver; background: black;">
-##re-set working directory if you have exited R, and re-load libraries
-diffexp_genes = read.csv("results_genes.csv",header=T)
-diffexp_genes = as.data.frame(diffexp_genes)
-gene_ids = diffexp_genes[,2]
-head(diffexp_genes)
+Once imported different layouts can be tried listed under layout tab of cytoscape. Once you have chosen an appropriate layout and then import  differential expression data stored in csv or txt file using icon. <img src="cytoscape_a6.png">
 
-  <strong>  feature        id        fc         pval      qval
-1    gene AT4G26490 1.8592283 8.332206e-05 0.9867726
-2    gene AT2G43560 0.7928405 1.493978e-04 0.9867726
-3    gene AT5G56190 1.2918812 5.258671e-04 0.9996177
-4    gene AT1G20680 0.4650873 5.619321e-04 0.9996177
-5    gene AT2G21640 0.4748031 6.413582e-04 0.9996177
-6    gene AT1G78200 1.3836987 6.999308e-04 0.9996177</strong>
-</pre>
+Once the genes with differential expression is loaded, select the "Style tab and choose the "Fill Color".  Under fill color choose Column value to "fc" (fold change from csv file) and set Mapping type to "Continous mapping". You can double click on the color panel to set colors of your choice and can set boudries.<img src="cytoscape_a7.png"> <img src="cytoscape_a8.png">
 
-We care only about the gene IDs and their fold-changes.
+This will highlight the nodes based on the value of fc for protein present in differentially expressed genes and in the network list.<img src="cytoscape_a9.png">
 
-<pre style="color: silver; background: black;">
-diffexp_genes = diffexp_genes[,3]
-diffexp_genes = as.data.frame(diffexp_genes)
-rownames(diffexp_genes) = gene_ids
-colnames(diffexp_genes) = "fc"
-head(diffexp_genes)
-<strong>
-                 fc
-AT4G26490 1.8592283
-AT2G43560 0.7928405
-AT5G56190 1.2918812
-AT1G20680 0.4650873
-AT2G21640 0.4748031
-AT1G78200 1.3836987</strong>
-</pre>
-
-Now we need to calculate the distances of each gene from one another based on fold change. This is easy, we simply start make an nrow x nrow matrix where each cell in the matrix is the absolute value of its row and column genes' fold-changes subtracted from one another. R has a very friendly package "dist()" which does this for us. dist only requires the raw matrix, and will do the rest of the work. Let's try it out:
-
-<pre style="color: silver; background: black;">
-dist_diffexp_genes = dist(diffexp_genes)
-
-head(dist_diffexp_genes)
-<strong>[1] 1.0663878 0.5673472 1.3941411 1.3844252 0.4755296 0.4786169</strong></pre>
-
-Do not worry that there are no names in this output! dist() has kept track of the names and you may trust this output. Now we may move on to creating our groups for the tree based on the distances. We will be using hclust(), which is a <a href="https://en.wikipedia.org/wiki/Hierarchical_clustering">hierarchical clustering</a> command. We won't go into the math involved, as your brain is probably quite tired already. However, hclust requires only one argument, the output of the dist() function. Let's try it:
-	
-<pre style="color: silver; background: black;">clusters = hclust(dist_diffexp_genes)</pre>
-
-The output of head(clusters) is much too large to include here. However, we can plot our dendrogram quite easily:
-
-<pre style="color: silver; background: black;">plot(clusters)</pre>
-
-<img src="Cluster.png">
-
-If you squint you can estimate how many groups is suitable with which to start. I count 12. We can group our dendogram into its twelve most clostly related parts using the function rect.hclust(). 
-
-rect.hclust() requires two arguments, the dendogram object and the number of groups:
-
-<pre style="color: silver; background: black;">rect.hclust(clusters,h=0.5)
-length(rect.hclust(clusters,h=0.5))
-<strong>[1] 9</strong></pre>
-
-plot(clusters_9, main="Fold change dendrogram in 9 parts")
-rect.hclust(clusters, k = 9)</pre>
-
-Each gene now belongs to one cluster 1-9. Using RFLPtools' function write.hclust().
-
-write.hclust() takes the dendrogram object, the number of groups desired, the output file name, and a prefix string which simply describes the data. Because write and rect are both functions of hclust, the output will be the same as long as the number of groups is the same. Let's write our clusters of 12 group:
-
-<pre style="color: silver; background: black;">write.hclust(clusters, k = 9, file="clusters_of_9.txt",prefix="genes")
-head("clusters_of_9.txt")
-clusters_of_9_csv = read.table("clusters_of_9.txt", sep="\t", header=T)
-##we know that the file is tab delimitedhead(clusters_of_12_csv)
-<strong>     Sample Cluster Cluster.ID
-1 AT4G26490       1  genes_H_1
-2 AT2G43560       2  genes_H_2
-3 AT5G56190       3  genes_H_3
-4 AT1G20680       4  genes_H_4
-5 AT2G21640       4  genes_H_4
-6 AT1G78200       5  genes_H_5</strong>
-##we only need columns 1 and 2
-clusters_of_9_csv = clusters_of_9_csv[,1:2]
-head(clusters_of_9_csv)
-<strong>     Sample Cluster
-1 AT4G26490       1
-2 AT2G43560       2
-3 AT5G56190       3
-4 AT1G20680       4
-5 AT2G21640       4
-6 AT1G78200       5</strong>
-##now let's write our csv
-write.csv(clusters_of_9_csv, file = "clusters_of_9.csv", row.names=F)</pre>
-
-If you briefly open the clusters_of_!2.csv file on your desktop you'll see we have a perfect edge list! Now let's repeat twice more, but with groups of 6 (each group merged with its closest neighbor) and 3 (each group merged with its 3 closest neighbors):
-
-<pre style="color: silver; background: black;">
-write.hclust(clusters, h = 1.2, file = "clusters_of_5.txt", prefix="genes")
-clusters_of_5_csv = read.table("clusters_of_5.txt", sep="\t", header=T)
-clusters_of_5_csv = clusters_of_5_csv[,1:2]
-write.csv(clusters_of_5_csv, file="clusters_of_5.csv", row.names=F)
-
-write.hclust(clusters, k = 3, file = "clusters_of_3.txt", prefix="genes")
-clusters_of_3_csv = read.table("clusters_of_3.txt", sep="\t", header=T)
-clusters_of_3_csv = clusters_of_3_csv[,1:2]
-write.csv(clusters_of_3_csv, file="clusters_of_3.csv", row.names=F)</pre>
-
-Now that we have our clusters, we are going to need to combine all of them into one edge list. This seems easy, but keep in mind that if we copy and paste them as is we have three group 1s, 2s, and 3s, which each are actually a different group! Let's start with the clusters of 3. We know that in our largest we have groups 1-9. So for each group in clusters of 3 we must transform them such that they are not any number 1 - 9. The easiest way to do this is to make them incremental. 
-Our groups are now 1-9,10-14 and 15-17. No overlap! Lastly we simply copy clusters of 5 and paste it beneath clusters of 3, followed by copying clusters of 9 and pasting those beneath the other two. Lastly, save your file and you are ready to use Cytoscape!
-
-First, load Cytoscape and you will be greeted with a screen like this:
-<img src="cytoscape1.png">
-Click this icon:
-<img src="cytoscape2.png">
-
-and load your data. Your screen should now look like:
-<img src="cytoscape3.png">
-
-Cytoscape does not know which are the sources and which are the nodes. We know that our genes are our sources flowing into our nodes. Therefore, we click on sample and the following window should appear:
-<img src="cytoscape4.png">
-Click on "Source node".
-
-Now click on "Cluster" and then "Target node".
-
-Lastly, hit OK to import your data. 
-
-Currently our data is not in a very presentable format. Let's go over to the Style button and click the box which says "default". Click on "curved". Then click on Layout and choose "circular layout". The end result should be this:
-<img src="all_clusters.csv.png">
-
-Play around and familiarize yourself with Cytoscape. It is a very handy tool!
-
-We see we have one large central network which connects to two small networks. Lastly, we have a peripheral network which seems to be distinct. There simply is too much going on here for us to extract much meaningful  Information. Let's pare down our  Information. Instead of creating a network based on genes, let's instead create a network based on the groups. That is, should a gene appear in three distinct groups, 1, 2, 3, we could create a network simply with the nodes 1, 2, 3. We have approximately 200 genes, but only 17 groups! We know all the groups to which each gene belongs, so no  Information will be lost. Let's combine all of our groupings from the clusters of 3, 5, and 9:
-
-<pre style="color: silver; background: black;">clusters_of_3 = read.csv("clusters_of_3.csv",header=T,col.names = c("gene","cluster3"))
-clusters_of_5 = read.csv("clusters_of_5.csv",header=T,col.names = c("gene","cluster5"))
-clusters_of_9 = read.csv("clusters_of_9.csv",header=T,col.names = c("gene","cluster9"))
-groupings <- merge(clusters_of_3,clusters_of_5,by.x="gene",by.y="gene")
-groupings = merge(groupings,clusters_of_9,by.x="gene",by.y="gene")
-groupings$cluster5 <-groupings$cluster5+9
-groupings$cluster3 <-groupings$cluster3+14
-head(groupings)
-<strong>      gene cluster3 cluster5 cluster9
-1 AT1G01090       15       11        3
-2 AT1G02560       15       11        2
-3 AT1G02750       15       11        2
-4 AT1G05710       15       11        3
-5 AT1G06190       15       11        2
-6 AT1G07640       15       11        2</strong></pre>
-
-As we can see, many genes have the same grouping patterns. However, we can extract all of the different grouping patterns using the "unique" function:
-
-<pre style="color: silver; background: black;">unique_set<-unique(groupings[2:4])
-unique_set
-<strong>   cluster3 cluster5 cluster9
-1        15       11        3
-2        15       11        2
-14       15       10        5
-15       15       11        4
-16       15       10        1
-23       16       12        6
-42       16       12        7
-51       16       14        9
-58       17       13        8</strong></pre>
-
-Now, we know that each cluster from our clusters of 3 will have a mate in the clusters of 5 and 9. We also know this for clusters of 5 and so on. Because there are two sets containing mates for each cluster, let's create a matrix which contains each cluster vector (so clusters of 3 groupings) twice as the first column, with the mates in the second column (i.e., for the first instance of clusters of 3 in the first column the second column will have the mates from clusters of 5, in the second instance of clusters of 3 in the first column, the second column will have the mates from clusters of 9). Then let's create a complete edge list combining this  Information for all three clusters:
-
-<pre style="color: silver; background: black;">clusters_of_3_network = c(unique_set[,1],unique_set[,1])
-clusters_of_5_network = c(unique_set[,2],unique_set[,2])
-clusters_of_9_network = c(unique_set[,3],unique_set[,3])
-edge_list_3 = matrix(clusters_of_3_network, nrow =18, ncol=2)
-edge_list_3[,2] = c(unique_set[,2],unique_set[,3])
-#edge_list_3
-edge_list_5 = matrix(clusters_of_5_network, nrow =18, ncol=2)
-edge_list_5[,2] = c(unique_set[,1],unique_set[,3])
-#edge_list_5
-edge_list_9 = matrix(clusters_of_9_network, nrow =18, ncol=2)
-edge_list_9[,2] = c(unique_set[,1],unique_set[,2])
-#edge_list_9
-complete_edge_list = rbind(edge_list_3,edge_list_5)
-complete_edge_list = rbind(complete_edge_list, edge_list_9)
-head(complete_edge_list)<strong>     [,1] [,2]
-[1,]   15   11
-[2,]   15   11
-[3,]   15   10
-[4,]   15   11
-[5,]   15   10
-[6,]   16   12</strong>
-
-write.csv(complete_edge_list,file = "complete_edge_list.csv",row.names=F)</pre>
-
-Let's now visualize this edge list in Cytoscape. The end result should look something like this:
-<img src="complete_edge_list.csv.png">
-
-While this is nice, we would like some computational proof of which groups have the highest connectivity and the degree of relationships among groups. We will term "connectivity" for this tutorial simply as the number of neighbors a group has. We will term "degree of relationship" as the number of neighbors through which one group must go before reaching the other group + 1. Looking at our Cytoscape output we see that for connected groups the greatest degree of relationships is 2. For groups in separate clusters we will call their degree of relationship as  Inf.
-
-If you click on the export button in Cytoscape, we will have the option of exporting the network. Click on that and export the network as a .xml file. 
-
-Now, <a href="https://support.office.com/en-us/article/import-xml-data-6eca3906-d6c9-4f0d-b911-c736da817fa4#bmopen_an_xml_data_file">open the .xml file in Microsoft Excel</a>, and you should see something like this:
-
-While we will not go into great detail here, we are interested in the ns1:data4 column. Copy and paste that column into a new Excel workbook and save it under the name "interaction_list.csv". Now let's load this file into R:
-
-<pre style="color: silver; background: black;">interaction_list = read.csv("interaction_list.csv",header=T)
-head(interaction_list)
-<strong>  SUID    interaction                   name selected shared.interaction            shared.name
-1  572 interacts with 15 (interacts with) 11    false     interacts with 15 (interacts with) 11
-2  573 interacts with 15 (interacts with) 11    false     interacts with 15 (interacts with) 11
-3  575 interacts with 15 (interacts with) 10    false     interacts with 15 (interacts with) 10
-4  576 interacts with 15 (interacts with) 11    false     interacts with 15 (interacts with) 11
-5  577 interacts with 15 (interacts with) 10    false     interacts with 15 (interacts with) 10
-6  580 interacts with 16 (interacts with) 12    false     interacts with 16 (interacts with) 12</strong></pre>
-
-We see that all of the  Information has been stored in the last column and the first column is simply an index. Let's keep only the last column:
-
-<pre style="color: silver; background: black;">> interaction_list1 <-interaction_list[,"shared.name"]
-head(interaction_list1)
-
-<strong> [1] 15 (interacts with) 11 15 (interacts with) 11 15 (interacts with) 10 15 (interacts with) 11 15 (interacts with) 10
- [6] 16 (interacts with) 12 16 (interacts with) 12 16 (interacts with) 14 17 (interacts with) 13 15 (interacts with) 3 
-[11] 15 (interacts with) 2  15 (interacts with) 5  15 (interacts with) 4  15 (interacts with) 1  16 (interacts with) 6 
-[16] 16 (interacts with) 7  16 (interacts with) 9  17 (interacts with) 8  11 (interacts with) 15 11 (interacts with) 15
-[21] 10 (interacts with) 15 11 (interacts with) 15 10 (interacts with) 15 12 (interacts with) 16 12 (interacts with) 16
-[26] 14 (interacts with) 16 13 (interacts with) 17 11 (interacts with) 3  11 (interacts with) 2  10 (interacts with) 5 
-[31] 11 (interacts with) 4  10 (interacts with) 1  12 (interacts with) 6  12 (interacts with) 7  14 (interacts with) 9 
-[36] 13 (interacts with) 8  3 (interacts with) 15  2 (interacts with) 15  5 (interacts with) 15  4 (interacts with) 15 
-[41] 1 (interacts with) 15  6 (interacts with) 16  7 (interacts with) 16  9 (interacts with) 16  8 (interacts with) 17 
-[46] 3 (interacts with) 11  2 (interacts with) 11  5 (interacts with) 10  4 (interacts with) 11  1 (interacts with) 10 
-[51] 6 (interacts with) 12  7 (interacts with) 12  9 (interacts with) 14  8 (interacts with) 13 
-46 Levels: 1 (interacts with) 10 1 (interacts with) 15 10 (interacts with) 1 10 (interacts with) 15 ... 9 (interacts with) 16</strong>
-</pre>
-Now we simply need to create a matrix which contains all of our sources (the group before "interacts with") in the first column and all of their sinks (the group after "interacts with") in the second column. First, it will be useful to remove "(interacts with)" from all of the elements. We can do this using <a href="http://stat.ethz.ch/R-manual/R-devel/library/base/html/grep.html">gsub</a>:
-<pre style="color: silver; background: black;">	
-interaction_list1= gsub("[[:punct:]]interacts with[[:punct:]]","",interaction_list1)
-interaction_list1
-<strong> 
-[1] "15  11" "15  11" "15  10" "15  11" "15  10" "16  12" "16  12" "16  14" "17  13" "15  3"  "15  2"  "15  5"  "15  4" 
-[14] "15  1"  "16  6"  "16  7"  "16  9"  "17  8"  "11  15" "11  15" "10  15" "11  15" "10  15" "12  16" "12  16" "14  16"
-[27] "13  17" "11  3"  "11  2"  "10  5"  "11  4"  "10  1"  "12  6"  "12  7"  "14  9"  "13  8"  "3  15"  "2  15"  "5  15" 
-[40] "4  15"  "1  15"  "6  16"  "7  16"  "9  16"  "8  17"  "3  11"  "2  11"  "5  10"  "4  11"  "1  10"  "6  12"  "7  12" 
-[53] "9  14"  "8  13" 
-</strong>
-
-sources=c()
-sink=c()
-for (pair in interaction_list1){ 
-  sources<-c(sources,strsplit(pair,"  ")[[1]][1])
-  sink <-c(sink,strsplit(pair,"  ")[[1]][2])
-}
-sources
-<strong>[1] "15" "15" "15" "15" "15" "16" "16" "16" "17" "15" "15" "15" "15" "15" "16" "16" "16" "17" "11" "11" "10" "11" "10" "12" "12" "14" "13"
-[28] "11" "11" "10" "11" "10" "12" "12" "14" "13" "3"  "2"  "5"  "4"  "1"  "6"  "7"  "9"  "8"  "3"  "2"  "5"  "4"  "1"  "6"  "7"  "9"  "8" 
-</strong>
-sinks
-<strong>[1] "11" "11" "10" "11" "10" "12" "12" "14" "13" "3"  "2"  "5"  "4"  "1"  "6"  "7"  "9"  "8"  "15" "15" "15" "15" "15" "16" "16" "16" "17"
-[28] "3"  "2"  "5"  "4"  "1"  "6"  "7"  "9"  "8"  "15" "15" "15" "15" "15" "16" "16" "16" "17" "11" "11" "10" "11" "10" "12" "12" "14" "13"</strong>
-</pre>
-
-If we compare element 28 across all of our vectors, we see that we have the correct format and  Information. Now, let's create our sources and sinks matrix. A word of note, these are not truly sources and sinks! They connect in both directions. Because of this, we will want to make our sources and sinks matrix, a sinks and sources matrix, and then adjoin the two together by rows:
-
-<pre style="color: silver; background: black;">sourcesf<-as.numeric(c(sources,sink))
-sinkf<-as.numeric(c(sink,sources))
-
-source_sink<-data.frame("sources"=sourcesf,"sink"=sinkf)
-head(source_sink)<strong>  sources sinks
-1      15   11
-2      15   11
-3      15   10
-4      15   11
-5      15   10
-6      16   12</strong>
-unique_interactions = unique(source_sink)
-dim(unique_interactions)
-<strong>46  2</strong></pre>
-
-We have 46 unique interactions. Our first job is to determine our degree of relations. To do this, we first need a starting degree of relations matrix. We know that we have 17 groups. Let's make a 17 by 17 matrix and place its column and row names as our groups:
-
-<pre style="color: silver; background: black;">degree_of_relation_matrix = matrix(0, nrow=17, ncol=17)
-##we know that each group appears in either of the columns, so we can simply grab all of our groups from the sources columns
-groups = unique(unique_interactions[,1])
-##we order our columns to make them easier to read
-groups = sort(groups,decreasing=FALSE)
-#now we name our degree_of_relation_matrix
-rownames(degree_of_relation_matrix) = groups
-colnames(degree_of_relation_matrix) = groups
-degree_of_relation_matrix
- <strong> 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
-1  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-2  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-3  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-4  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-5  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-6  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-7  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-8  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-9  0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-10 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-11 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-12 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-13 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-14 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-15 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-16 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0
-17 0 0 0 0 0 0 0 0 0  0  0  0  0  0  0  0  0</strong></pre>
-
-We know a few things which will help us fill in this matrix. Remember that the degree of relationship is simply the number of neighbors through which one group must go to get to the other + 1. That means the most closely related groups will have a degree of 1. What about each group with itself? As a conventional rule, we will define each group as having a 0th degree of relationship with itself. Great, we now know that groups that are connected with no neighbors in between necessary will have a degree of 1, with one neighbor between necessary 2, and so forth. We are lucky in that we know from our Cytoscape output that our highest degree of relationship is 2. Our final convention is that should two groups be disconnected we give them a degree of relationship of  Infinity (the higher the degree, the less connected the groups are). While most of this code is straight forward, let's take a minute to go over how we will determine those with a second degree of relationship. Suppose we have groups A and B which has a second degree of relatioship. We know that A and B must share a neighbor. But how do we determine that? Well, if we take the neighbors of A's neighbors, and the neighbors of B's neighbors, we know that at least one of A's neighbors' neighbors and B's neighbors' neighbors will be the same. Therefore, if the length of the intersection of A's neighbors' neighbors and B's neighbors' neighbors is 1 or above, A and B have a second degree relationship! While that is all very confusing, I invite you to read it over a few times until the sense is apparent. Because we know that our highest degree of relationship is 2, if the intersection described prior is the empty set then A and B are not connected, and have a degree of relationship of  Infinity. Let's now write our code:
-
-<pre style="color: silver; background: black;">for (i in 1:nrow(degree_of_relation_matrix)){
-for (j in 1:ncol(degree_of_relation_matrix)){
-source = rownames(degree_of_relation_matrix)[i]
-sink = colnames(degree_of_relation_matrix)[j]
-if (source == sink){
-degree_of_relation_matrix[i,j]=0}
-
-else {
-interaction = c(source, sink)
-interaction = matrix(as.integer(interaction), ncol = 2, byrow=T)
-success = FALSE
-if (success==FALSE){
-for (x in 1:nrow(unique_interactions)){
-if(sum(interaction == unique_interactions[x,])==2){
-degree_of_relation_matrix[i,j] = 1
-success = TRUE
-}
-}
-}
-if (success==FALSE){
-extended_source_interaction = unique_interactions[unique_interactions$source == source,]
-extended_sink_interaction = unique_interactions[unique_interactions$sink == sink,]
-if (length(intersect(extended_source_interaction[,2],extended_sink_interaction[,1]))>=1){
-degree_of_relation_matrix[i,j] = 2
-}
-else{degree_of_relation_matrix[i,j] =  Inf
-}
-}
-}
-}
-}
-
-degree_of_relation_matrix
-<strong>
-      1    2    3    4    5    6    7    8    9   10   11   12   13   14   26   28   39   42   56   70   84
-1     0    2    2  Inf  Inf    2    2  Inf  Inf  Inf  Inf  Inf    1    1  Inf  Inf  Inf  Inf    2  Inf  Inf
-2     2    0    2  Inf  Inf    2    2  Inf  Inf  Inf  Inf  Inf    1    1  Inf  Inf  Inf  Inf    2  Inf  Inf
-3     2    2    0  Inf  Inf    2    2  Inf  Inf  Inf  Inf  Inf    1    1  Inf  Inf  Inf  Inf    2  Inf  Inf
-4   Inf  Inf  Inf    0  Inf  Inf  Inf    2    2    2    2    2  Inf  Inf    1    1  Inf  Inf  Inf    2    2
-5   Inf  Inf  Inf  Inf    0  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf    1    1  Inf  Inf  Inf
-6     2    2    2  Inf  Inf    0    2  Inf  Inf  Inf  Inf  Inf    1    1  Inf  Inf  Inf  Inf    2  Inf  Inf
-7     2    2    2  Inf  Inf    2    0  Inf  Inf  Inf  Inf  Inf    1    2  Inf  Inf  Inf  Inf    1  Inf  Inf
-8   Inf  Inf  Inf    2  Inf  Inf  Inf    0    2    2    2    2  Inf  Inf    1    2  Inf  Inf  Inf    1    2
-9   Inf  Inf  Inf    2  Inf  Inf  Inf    2    0    2    2    2  Inf  Inf    1    1  Inf  Inf  Inf    2    2
-10  Inf  Inf  Inf    2  Inf  Inf  Inf    2    2    0    2    2  Inf  Inf    1    1  Inf  Inf  Inf    2    2
-11  Inf  Inf  Inf    2  Inf  Inf  Inf    2    2    2    0    2  Inf  Inf    1    2  Inf  Inf  Inf    2    1
-12  Inf  Inf  Inf    2  Inf  Inf  Inf    2    2    2    2    0  Inf  Inf    1    1  Inf  Inf  Inf    2    2
-13    1    1    1  Inf  Inf    1    1  Inf  Inf  Inf  Inf  Inf    0    1  Inf  Inf  Inf  Inf    1  Inf  Inf
-14    1    1    1  Inf  Inf    1    2  Inf  Inf  Inf  Inf  Inf    1    0  Inf  Inf  Inf  Inf    2  Inf  Inf
-26  Inf  Inf  Inf    1  Inf  Inf  Inf    1    1    1    1    1  Inf  Inf    0    1  Inf  Inf  Inf    1    1
-28  Inf  Inf  Inf    1  Inf  Inf  Inf    2    1    1    2    1  Inf  Inf    1    0  Inf  Inf  Inf    2    2
-39  Inf  Inf  Inf  Inf    1  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf    0    1  Inf  Inf  Inf
-42  Inf  Inf  Inf  Inf    1  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf  Inf    1    0  Inf  Inf  Inf
-56    2    2    2  Inf  Inf    2    1  Inf  Inf  Inf  Inf  Inf    1    2  Inf  Inf  Inf  Inf    0  Inf  Inf
-70  Inf  Inf  Inf    2  Inf  Inf  Inf    1    2    2    2    2  Inf  Inf    1    2  Inf  Inf  Inf    0    2
-84  Inf  Inf  Inf    2  Inf  Inf  Inf    2    2    2    1    2  Inf  Inf    1    2  Inf  Inf  Inf    2    0</strong>
-
-write.csv(file="degree_of_relation_matrix.csv",degree_of_relation_matrix,row.names=T)</pre>
-
-Notice two things: the first is that the diagonal is 0, the second is that the matrix is symmetric across its diagonal. I will leave those two points for you to ponder. Our final task is much easier. We simply want to determine the connectivity of each group. Therefore, we only need a matrix with one column, each row corresponding to a group. We also know that because our unique_interactions group is non-redundant, every time a group appears in either the first (or second, as they are symmetric) column that it is a unique connection. We can calculate the total number of each connections per group to get the total connectivity for the group. Let's make the matrix:
-
-<pre style="color: silver; background: black;">total_connectivity = matrix(1:nrow(degree_of_relation_matrix),ncol=1)
-rownames(total_connectivity) = rownames(degree_of_relation_matrix)
-
-for (i in 1:nrow(total_connectivity)){
-total_connectivity[i,] = sum(rownames(total_connectivity)[i] == unique_interactions[,1])
-}
-total_connectivity
-<strong>   [,1]
-1     2
-2     2
-3     2
-4     2
-5     2
-6     2
-7     2
-8     2
-9     2
-10    2
-11    2
-12    2
-13    7
-14    5
-26    9
-28    5
-39    2
-42    2
-56    2
-70    2
-84    2</strong>
-write.csv(file="total_connectivity_by_group.csv",total_connectivity,row.names=T)</pre>
 
 <h2 id="Eighth_Point_Header">Conclusion</h2>
 You may find yourself wondering exactly what it is that we acccomplished by the end of this analysis. First, to recap we:
@@ -1786,3 +1397,4 @@ Created visual gene topologial networks
 Extracted computational  Information about those networks</pre>
 
 While our work may have seemed completed after creating the visualization, the picture itself is not of much use to other scientists! However, all of the csv files we created are. A scientist may have an interest in one particular gene we studied. With our differential expression results output she will be able to determine how the gene's behavior varied according to phenotype. Perhaps she wants to begin investigating if one gene codes for a transcription factor of another. She can consult our gene complete clusters file and see if the two genes belong to the same cluster (as the activation of one will activate the other!). She may be interested in the total behavior of one cluster in activating or suppressing another cluster. She can determine her base and target clusters by locating the genes in our complete clusters file, extract all genes from those clusters, and then explore how downstream each cluster's effect may be by utilizing the degree of relationship csv. Bio Informatics is a collaborative field. We are always dependent on the work of others to solve the questions about which we are the most passionate. Because of this, it is important to always dig deep in your own analysis, and to create as readable and handy data as you can. Not only because you do not want another scientist to be lost in your files, but they must be readable by a computer! Sometimes, it may have felt like we were going down the rabbit hole in this tutorial. However, the  Information we compiled is easy and immediately helpful for fellow scientists to use. Congratulations on finishing this tutorial successfully!
+
