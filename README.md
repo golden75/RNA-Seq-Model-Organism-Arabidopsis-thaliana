@@ -226,17 +226,17 @@ module load sickle
 
 mkdir -p ../trimmed_reads
 
-sickle pe -t sanger -f /raw_data/wt_Rep1_R1.fastq -r /raw_data/wt_Rep1_R2.fastq -o /trimmed_reads/trimmed_wt_Rep1_R1.fastq p /trimmed_reads/trimmed_wt_Rep1_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep1_R1.fastq
+sickle pe -t sanger -f /raw_data/wt_Rep1_R1.fastq -r /raw_data/wt_Rep1_R2.fastq -o /trimmed_reads/trimmed_wt_Rep1_R1.fastq -p /trimmed_reads/trimmed_wt_Rep1_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep1_R1.fastq
 
-sickle pe -t sanger -f /raw_data/wt_Rep2_R1.fastq -r /raw_data/wt_Rep2_R2.fastq -o /trimmed_reads/trimmed_wt_Rep2_R1.fastq p /trimmed_reads/trimmed_wt_Rep2_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep2_R1.fastq
+sickle pe -t sanger -f /raw_data/wt_Rep2_R1.fastq -r /raw_data/wt_Rep2_R2.fastq -o /trimmed_reads/trimmed_wt_Rep2_R1.fastq -p /trimmed_reads/trimmed_wt_Rep2_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep2_R1.fastq
 
-sickle pe -t sanger -f /raw_data/wt_Rep3_R1.fastq -r /raw_data/wt_Rep3_R2.fastq -o /trimmed_reads/trimmed_wt_Rep3_R1.fastq p /trimmed_reads/trimmed_wt_Rep3_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep3_R1.fastq
+sickle pe -t sanger -f /raw_data/wt_Rep3_R1.fastq -r /raw_data/wt_Rep3_R2.fastq -o /trimmed_reads/trimmed_wt_Rep3_R1.fastq -p /trimmed_reads/trimmed_wt_Rep3_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep3_R1.fastq
 
-sickle pe -t sanger -f /raw_data/mutant_Rep1_R1.fastq -r /raw_data/mutant_Rep1_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep1_R1.fastq p /trimmed_reads/trimmed_mutant_Rep1_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep1_R1.fastq
+sickle pe -t sanger -f /raw_data/mutant_Rep1_R1.fastq -r /raw_data/mutant_Rep1_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep1_R1.fastq -p /trimmed_reads/trimmed_mutant_Rep1_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep1_R1.fastq
 
-sickle pe -t sanger -f /raw_data/mutant_Rep2_R1.fastq -r /raw_data/mutant_Rep2_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep2_R1.fastq p /trimmed_reads/trimmed_mutant_Rep2_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep2_R1.fastq
+sickle pe -t sanger -f /raw_data/mutant_Rep2_R1.fastq -r /raw_data/mutant_Rep2_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep2_R1.fastq -p /trimmed_reads/trimmed_mutant_Rep2_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep2_R1.fastq
 
-sickle pe -t sanger -f /raw_data/mutant_Rep3_R1.fastq -r /raw_data/mutant_Rep3_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep3_R1.fastq p /trimmed_reads/trimmed_mutant_Rep3_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep3_R1.fastq
+sickle pe -t sanger -f /raw_data/mutant_Rep3_R1.fastq -r /raw_data/mutant_Rep3_R2.fastq -o /trimmed_reads/trimmed_mutant_Rep3_R1.fastq -p /trimmed_reads/trimmed_mutant_Rep3_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_mutant_Rep3_R1.fastq
 
                                                                                             
 </pre>
