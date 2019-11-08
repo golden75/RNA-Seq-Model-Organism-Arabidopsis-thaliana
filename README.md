@@ -224,7 +224,7 @@ export TMPDIR=/home/CAM/$USER/tmp/
 
 module load sickle
 
-mkdir -p ../trimmed_reads
+mkdir -p trimmed_reads
 
 sickle pe -t sanger -f /raw_data/wt_Rep1_R1.fastq -r /raw_data/wt_Rep1_R2.fastq -o /trimmed_reads/trimmed_wt_Rep1_R1.fastq -p /trimmed_reads/trimmed_wt_Rep1_R2.fastq -l 45 -q 25 -s /trimmed_reads/singles_wt_Rep1_R1.fastq
 
