@@ -363,11 +363,11 @@ hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thalia
 
 hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_wt_Rep3_R1.fastq -2 ../trimmed_reads/trimmed_wt_Rep3_R2.fastq -S ../mapping/wt_Rep3.sam
 
-hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep1_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep1_R2.fastq -S ../mapping/_mutant_Rep1.sam
+hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep1_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep1_R2.fastq -S ../mapping/mutant_Rep1.sam
 
-hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep2_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep2_R2.fastq -S ../mapping/_mutant_Rep2.sam
+hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep2_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep2_R2.fastq -S ../mapping/mutant_Rep2.sam
 
-hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep3_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep3_R2.fastq -S ../mapping/_mutant_Rep3.sam
+hisat2 -p 8 --dta -x /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/athaliana10/athaliana10 -1 ../trimmed_reads/trimmed_mutant_Rep3_R1.fastq -2 ../trimmed_reads/trimmed_mutant_Rep3_R2.fastq -S ../mapping/mutant_Rep3.sam
 
 ```
 
@@ -644,17 +644,17 @@ mkdir -p ../ballgown/{athaliana_wt_Rep1,athaliana_wt_Rep2,athaliana_wt_Rep3,atha
 
 module load stringtie
 
-stringtie -e -B -p 8 ../mapping/wt_Rep1_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_wt_Rep1/athaliana_wt_Rep1.count -A ../counts/athaliana_wt_Rep1/wt_Rep1_gene_abun.out
+stringtie -e -B -p 8 ../mapping/wt_Rep1_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_wt_Rep1/athaliana_wt_Rep1.count -A ../ballgown/athaliana_wt_Rep1/wt_Rep1_gene_abun.out
 
-stringtie -e -B -p 8 ../mapping/wt_Rep2_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_wt_Rep2/athaliana_wt_Rep2.count -A ../counts/athaliana_wt_Rep2/wt_Rep2_gene_abun.out
+stringtie -e -B -p 8 ../mapping/wt_Rep2_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_wt_Rep2/athaliana_wt_Rep2.count -A ../ballgown/athaliana_wt_Rep2/wt_Rep2_gene_abun.out
 
-stringtie -e -B -p 8 ../mapping/wt_Rep3_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_wt_Rep3/athaliana_wt_Rep3.count -A ../counts/athaliana_wt_Rep3/wt_Rep3_gene_abun.out
+stringtie -e -B -p 8 ../mapping/wt_Rep3_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_wt_Rep3/athaliana_wt_Rep3.count -A ../ballgown/athaliana_wt_Rep3/wt_Rep3_gene_abun.out
 
-stringtie -e -B -p 8 ../mapping/mutant_Rep1_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_mutant_Rep1/athaliana_mutant_Rep1.count -A ../counts/athaliana_mutant_Rep1/mutant_Rep1_gene_abun.out
+stringtie -e -B -p 8 ../mapping/mutant_Rep1_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_mutant_Rep1/athaliana_mutant_Rep1.count -A ../ballgown/athaliana_mutant_Rep1/mutant_Rep1_gene_abun.out
 
-stringtie -e -B -p 8 ../mapping/mutant_Rep2_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_mutant_Rep2/athaliana_mutant_Rep2.count -A ../counts/athaliana_mutant_Rep2/mutant_Rep2_gene_abun.out
+stringtie -e -B -p 8 ../mapping/mutant_Rep2_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_mutant_Rep2/athaliana_mutant_Rep2.count -A ../ballgown/athaliana_mutant_Rep2/mutant_Rep2_gene_abun.out
 
-stringtie -e -B -p 8 ../mapping/mutant_Rep3_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../counts/athaliana_mutant_Rep3/athaliana_mutant_Rep3.count -A ../counts/athaliana_mutant_Rep3/mutant_Rep3_gene_abun.out
+stringtie -e -B -p 8 ../mapping/mutant_Rep3_sort.bam -G /isg/shared/databases/alignerIndex/plant/Arabidopsis/thaliana/TAIR10_GFF3_genes.gtf -o ../ballgown/athaliana_mutant_Rep3/athaliana_mutant_Rep3.count -A ../ballgown/athaliana_mutant_Rep3/mutant_Rep3_gene_abun.out
 
 
 </pre>
@@ -944,8 +944,8 @@ results_genes = arrange(results_genes,pval)
 results_genes = subset(results_genes, pval < 0.01)
 results_transcripts = arrange(results_transcripts, pval)
 results_transcripts = subset(results_transcripts, pval < 0.01)
-write.csv(results_transcripts, "transcript_results.csv", row.names=FALSE)
-write.csv(results_genes, "results_genes.csv", row.names=FALSE)
+write.csv(results_transcripts, "[PATH-correction]transcript_results.csv", row.names=FALSE)
+write.csv(results_genes, "[PATH-correction]results_genes.csv", row.names=FALSE)
 
 &#35;&#35;we use row.names=FALSE because currently the row names are just the numbers 1, 2, 3. . .
 </pre>
@@ -1362,7 +1362,7 @@ A-ha. We see the mismatch in dimension length is due to some genes having differ
 [241] "AT2G37790" "AT5G17210" "AT5G17210" "AT5G43066" "AT1G10430" "AT1G10430" "AT5G21930" "AT5G21930" "AT5G21930" "AT5G21930"
 [251] "AT1G80290" "AT1G80290" "AT1G26670" "AT4G26490"</strong>
 
-write.csv(file="annotated_genes.csv",annotated_genes,row.names=F)</pre>
+write.csv(file="[PATH-correction]annotated_genes.csv",annotated_genes,row.names=F)</pre>
 
 
 <h2 id="Seventh_Point_Header">Topological networking using cytoscape</h2>
